@@ -1,0 +1,274 @@
+---
+title: 'R: Flow Diagrams'
+author: "H. Carter"
+date: "1/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Flow Diagrams: Alluvial Plots and Sankey Diagrams
+
+These types of visualizations are usually used to show connections or movement between different groups or variables. The two terms are often used interchangably but to make a distinction, Sankey diagrams illustrate flow and have flow arrows with widths proportional to quanity, and alluvial plots have a set axis, making them more of a graph than a diagram. Sankey was an Irish captain and engineer who use this type of diagram to show the energy efficiency of steam engines. 
+
+We're going to explore making this type of visualization with the package ggalluvial. ggsankey is still a developmental package that requires slightly more complicated installation, and in my opinion has a less intuitive syntax, so we won't cover it in the body of the workshop but there is a link to a tutorial at the end of this document if you'd like to check out that package as well. It does make visually pleasing graphs. 
+
+First, you'll want to load the package. If you have ggalluvial installed just use library(ggalluvial), which will also load ggplot2 as ggalluvial works with the ggplot syntax. If you don't have one or both of those installed you can use install.packages("ggalluvial") and/or install.packages("ggplot2") to install them. If you have installed tidyverse, ggplot2 is also installed and you don't have to install it separately. 
+
+```{r Load Packages}
+library(ggalluvial)
+```
+
+## Example plot and parts of the graph
+
+We're going to start with an example using the Titanic dataset.
+
+```{r}
+titanic_wide <- data.frame(Titanic)
+head(titanic_wide)
+```
+
+These data include information on passengers and crew on the Titanic, including their class, sex, age, whether or not they survived, and the frequency of each combination.
+
+This example shows survival by class and age. 
+
+```{r}
+ggplot(titanic_wide, aes(axis1 = Class, axis2 = Age, y = Freq)) +
+  geom_alluvium(aes(fill = Survived)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)))
+```
+
+The important components when making this graph are 
+
+  * the selected axes in the aesthetics determining what you're showing the flow/connection between
+  
+  * the assignment of the y axis to whatever column in your data indicates frequency of interaction between your axes (some data won't have this and will just use each row as an alluvium without weighting them)
+  
+  * adding the geom_alluvium to connect the two (which in this case is also filled by survival)
+  
+  * and adding and labeling the strata (which are the divisions within your selected axes).
+  
+## Adjusting the included axes
+
+There is another variable in our data is not included in this graph: sex. We can add that to our graph by assigning another axes to our aes().
+
+```{r}
+ggplot(titanic_wide, aes(axis1 = Class, axis2 = Age, axis3 = Sex, y = Freq)) +
+  geom_alluvium(aes(fill = Survived)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)))
+```
+
+Note, that while this and many other datasets record sex as a binary, most biological organisms, including humans, are actually much more diverse than that. 
+
+## Exercise 1 and 2
+
+1. Reorder the axes in this graph. 
+
+```{r}
+
+```
+
+2. Remove one of the three axes. 
+
+```{r}
+
+```
+
+## Adjusting geom_alluvium
+
+We currently have geom_alluvium also conveying survival data, we could remove this extra level of information, and set survival to be an axis.
+
+```{r}
+ggplot(titanic_wide, aes(axis1 = Class, axis2 = Age, axis3 = Survived, y = Freq)) +
+  geom_alluvium() +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)))
+```
+
+The grey on grey of the alluviums now isn't very visually pleasing. Let's change that, first by changing the fill to a different color, second by changing the theme to remove the grey background.
+
+```{r}
+ggplot(titanic_wide, aes(axis1 = Class, axis2 = Age, axis3 = Survived, y = Freq)) +
+  geom_alluvium(fill = "black") +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)))
+```
+
+```{r}
+ggplot(titanic_wide, aes(axis1 = Class, axis2 = Age, axis3 = Survived, y = Freq)) +
+  geom_alluvium() +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  theme_minimal()
+```
+
+It might actually look best with both changes.
+
+## Exercises 3 and 4
+
+3. Change the alluviums to your favorite color.
+
+```{r}
+
+```
+
+4. Change the color of the alluviums to correspond to the sex of the people on the Titanic.
+
+```{r}
+
+```
+
+## Changing the shape of the curves
+
+The alluviums can also take different shapes. The options are
+
+  * linear
+  
+  * cubic
+  
+  * quintic
+  
+  * sine
+  
+  * arctangent
+  
+  * sigmoid
+  
+You can adjust them by setting the curve_type = argument within geom_alluvial(). 
+
+## Exercise 5
+
+Try all the different curve types, and write your favorite in the chat.
+
+```{r}
+
+```
+
+My favorite is cubic.
+
+```{r}
+ggplot(titanic_wide, aes(axis1 = Class, axis2 = Age, axis3 = Survived, y = Freq)) +
+  geom_alluvium(color = "red", curve_type = "cubic") +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)))
+```
+
+## Strata and labels
+
+The strata are the divisions in the data; the groups on each axes. geom_stratum() adds the boxes on the axes. They can be removed, though that makes it harder to see the delineations between groups. Their width and color can also be changed.
+
+The labels are mapped seperately with geom_text() and assigned to the stratum with the stat argument and the label argument within aes().
+
+```{r}
+ggplot(titanic_wide, aes(axis1=Class, axis2=Survived, y=Freq)) +
+  geom_alluvium() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(titanic_wide, aes(axis1=Class, axis2=Survived, y=Freq)) +
+  geom_alluvium() +
+  geom_stratum(aes(fill = Class)) +
+  scale_fill_manual(values=c("red","orange","green","blue")) +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  theme_minimal()
+```
+
+```{r}
+ggplot(titanic_wide, aes(axis1=Class, axis2=Survived, y=Freq)) +
+  geom_alluvium() +
+  geom_stratum(fill = "blue", width = 0.09) +
+  geom_text(stat = "stratum", color = "white", aes(label = after_stat(stratum))) +
+  theme_minimal()
+```
+
+If you'd like to color the strata on different axes differently, you'll need to reorganize your data. The explanation is outside the scope of this workshop but here is an example from Cory Brunson who is the author of the ggalluvial package. 
+
+```{r}
+# long data
+titanic_long <- to_lodes_form(data.frame(Titanic),
+                              key = "Demographic", value = "Group", id = "Cohort",
+                              axes = 1:3)
+# plot with all strata colored
+ggplot(data = titanic_long,
+       aes(x = Demographic, stratum = Group, alluvium = Cohort, y = Freq)) +
+  geom_alluvium(aes(fill=Group)) +
+  geom_stratum(aes(fill=Group)) +
+  geom_text(stat = "stratum", aes(label = Group)) +
+  theme_minimal() +
+  ggtitle("passengers on the maiden voyage of the Titanic", "stratified by demographics and survival")
+```
+
+## Showing experimental step with an alluvial diagram
+
+The paperConservation data is from an experiment done by a librarian at Northwestern who is testing the effects of different treatments on paper aging.
+
+I've made a rather blank and unhelpful alluvial diagram of the experimental set up below. 
+
+```{r}
+paperConservation <- read.csv("long_ph_data_no_values.csv")
+ggplot(paperConservation, aes(axis1 = paper, axis2 = condition, axis3 = subcondition, axis4 = aging)) +
+  geom_alluvium() +
+  geom_stratum()
+```
+
+## Exercise 6
+
+Make this graph more informative by 
+
+1. adding labels to the strata,
+
+2. reordering the axes to make the flow of information easier to follow,
+
+3. and adding some color if you feel like it! 
+
+extra. Label the graph and axis. Pick your favorite theme.
+
+```{r}
+
+```
+
+## Showing pollen movement from different plant populations
+
+The matingPopulation data are from my own dissertation. They are a record of mating pairs of evening primroses from the field (maternal and paternal plants), how many offspring they produced, and the site and chemotype of the paternal plant. 
+
+```{r}
+matingPopulation <- read.csv("matingPopulation.csv")
+```
+
+```{r echo=FALSE}
+ggplot(matingPopulation, aes(y = num_offspring,
+                                        axis1 = paternal,
+                                        axis2 = maternal,
+                                        fill = site)) +
+  geom_alluvium() +
+  geom_stratum(width = .25) +
+  scale_x_discrete(limits = c("Paternal", "Maternal"),
+                   expand = c(.05, .05)) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal() +
+  labs(fill = "Population") +
+  ylab("Number of offspring")
+```
+
+## Exercise 7
+
+See if you can make the plot above from the given data. 
+
+Hint: If you put fill = in the ggplot(aes()) it will populate the rest of the components with the same aesthetics. And I used a RBrewer palette called dark2.
+
+## Extra: ggsankey
+
+ggsankey is a package written by David Sjoberg. His github for the package (from which it has to be installed, either using devtools or remotes) is here https://github.com/davidsjoberg/ggsankey. 
+
+His readme gives a very good introduction and tutorial and he has another here: https://pythonrepo.com/repo/davidsjoberg-ggsankey-python-data-validation 
+
+The key thing to note is that ggsankey includes a function called make_long() which, if given the columns that you want to include as nodes/axes on your graph, will format the data correctly by putting it into the variables: x, node, next_x, and next_node, where x (and next_x) correspond to your x axis, and the nodes give the partitions between them. make_long() works with the dplyr and tidyverse %>% function. 
+
+
